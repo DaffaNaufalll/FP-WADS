@@ -1,10 +1,8 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useRef, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
-import { Bell, User, Plus, List, Home, Settings } from "lucide-react";
-
-console.log("DASHBOARD COMPONENT LOADED");
+import { Bell, Plus, List } from "lucide-react";
 
 export default function UserDashboard() {
   // Chatbot state
@@ -13,6 +11,57 @@ export default function UserDashboard() {
     { from: "bot", text: "Hi! How can I help you today?" }
   ]);
   const [input, setInput] = useState("");
+
+  // Profile dropdown state
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef(null);
+
+  // Notification state
+  const [notifs, setNotifs] = useState([
+    { id: 1, text: "Your ticket #1 has a new reply.", read: false },
+    { id: 2, text: "Your ticket #2 was marked as Pending.", read: false },
+  ]);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef(null);
+
+  // Search state for dashboard search bar
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Example tickets data (replace with real data or fetch)
+  const tickets = [
+    { id: 1, subject: "Shoe size question", status: "Pending" },
+    { id: 2, subject: "Order #345098", status: "On Hold" },
+    { id: 3, subject: "Feedback", status: "Completed" },
+    { id: 4, subject: "Refund request", status: "Pending" },
+    { id: 5, subject: "Shipping delay", status: "On Hold" },
+  ];
+
+  // Filter tickets based on search query
+  const filteredTickets = tickets.filter(ticket =>
+    ticket.subject.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const navigate = useNavigate();
+
+  // Logout handler
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileOpen(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setNotifOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleSend = (e) => {
     e.preventDefault();
@@ -28,6 +77,17 @@ export default function UserDashboard() {
     }, 800);
   };
 
+  const unreadCount = notifs.filter(n => !n.read).length;
+  const markAllRead = () => setNotifs(notifs.map(n => ({ ...n, read: true })));
+
+  // User data (replace with real data as needed)
+  const user = {
+    name: "John Doe",
+    email: "john.doe@email.com",
+    role: "User",
+    avatar: "https://ui-avatars.com/api/?name=John+Doe&background=10b981&color=fff"
+  };
+
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-green-100 via-green-200 to-white">
       {/* Sidebar */}
@@ -36,21 +96,15 @@ export default function UserDashboard() {
           <span className="text-green-600 font-bold text-2xl">Tokopedia HelpDesk</span>
         </div>
         <nav className="flex flex-col gap-4">
-          <Link to="/dashboard" className="flex items-center gap-3 text-gray-700 hover:text-green-600 font-medium py-2 px-3 rounded transition">
-            <Home className="h-5 w-5" /> Dashboard
-          </Link>
           <Link to="/view-tickets" className="flex items-center gap-3 text-gray-700 hover:text-green-600 font-medium py-2 px-3 rounded transition">
             <List className="h-5 w-5" /> Requests
           </Link>
-          <Link to="/my-details" className="flex items-center gap-3 text-gray-700 hover:text-green-600 font-medium py-2 px-3 rounded transition">
-            <Settings className="h-5 w-5" /> My Details
-          </Link>
         </nav>
         <div className="mt-auto flex items-center gap-3 pt-10 border-t">
-          <img src="https://ui-avatars.com/api/?name=John+Doe&background=10b981&color=fff" alt="User" className="h-10 w-10 rounded-full" />
+          <img src={user.avatar} alt="User" className="h-10 w-10 rounded-full" />
           <div>
-            <div className="font-semibold text-gray-700">John Doe</div>
-            <div className="text-xs text-gray-400">john.doe@email.com</div>
+            <div className="font-semibold text-gray-700">{user.name}</div>
+            <div className="text-xs text-gray-400">{user.email}</div>
           </div>
         </div>
       </aside>
@@ -63,12 +117,87 @@ export default function UserDashboard() {
             <span className="text-green-600 font-bold text-xl">Tokopedia HelpDesk</span>
           </div>
           <div className="flex items-center gap-4 ml-auto">
-            <Button variant="ghost" className="text-gray-600 hover:bg-green-50">
-              <Bell className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" className="text-gray-600 hover:bg-green-50">
-              <User className="h-5 w-5" />
-            </Button>
+            {/* Notification Bell */}
+            <div className="relative" ref={notifRef}>
+              <button
+                className="relative focus:outline-none"
+                onClick={() => setNotifOpen((open) => !open)}
+                aria-label="Notifications"
+              >
+                <Bell className="h-5 w-5 text-gray-600" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+              {notifOpen && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold text-gray-700">Notifications</span>
+                    <button
+                      className="text-xs text-green-600 hover:underline"
+                      onClick={markAllRead}
+                    >
+                      Mark all as read
+                    </button>
+                  </div>
+                  <div className="max-h-60 overflow-y-auto">
+                    {notifs.length === 0 && (
+                      <div className="text-gray-400 text-sm">No notifications.</div>
+                    )}
+                    {notifs.map((notif) => (
+                      <div
+                        key={notif.id}
+                        className={`px-3 py-2 rounded-md text-sm mb-1 ${
+                          notif.read ? "bg-gray-50 text-gray-400" : "bg-green-50 text-gray-700"
+                        }`}
+                      >
+                        {notif.text}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            {/* Profile Dropdown */}
+            <div className="relative" ref={profileRef}>
+              <button
+                className="focus:outline-none"
+                onClick={() => setProfileOpen((open) => !open)}
+              >
+                <img
+                  src={user.avatar}
+                  alt="User"
+                  className="h-10 w-10 rounded-full border-2 border-green-400"
+                />
+              </button>
+              {profileOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-green-100 z-50 p-6">
+                  <div className="flex flex-col items-center mb-4">
+                    <img
+                      src={user.avatar}
+                      alt="User"
+                      className="h-16 w-16 rounded-full mb-2"
+                    />
+                    <div className="text-lg font-bold text-green-700">{user.name}</div>
+                    <div className="text-gray-500 text-sm">{user.email}</div>
+                    <div className="text-xs text-gray-400 mt-1">{user.role}</div>
+                  </div>
+                  <Link to="/edit-details" className="w-full">
+                    <Button className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md">
+                      Edit Details
+                    </Button>
+                  </Link>
+                  <Button
+                    className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-md mt-4"
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
@@ -82,8 +211,33 @@ export default function UserDashboard() {
                 type="text"
                 placeholder="Search requests, templates, and tickets"
                 className="w-full px-6 py-4 rounded-full text-gray-800 shadow border border-green-200"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
               />
             </div>
+            {/* Show filtered results */}
+            {searchQuery && (
+  <div className="mt-4 bg-white rounded shadow p-4 text-left">
+    <h2 className="font-semibold mb-2 text-green-700">Search Results:</h2>
+    {filteredTickets.length === 0 ? (
+      <div className="text-gray-500">No matching tickets found.</div>
+    ) : (
+      <ul>
+        {filteredTickets.map(ticket => (
+          <li key={ticket.id} className="mb-2">
+            <Link
+              to={`/ticket/${ticket.id}`}
+              className="font-medium hover:underline"
+            >
+              {ticket.subject}
+            </Link>
+            <span className="ml-2 text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">{ticket.status}</span>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+)}
           </div>
 
           {/* Action Button */}
