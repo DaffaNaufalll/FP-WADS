@@ -1,44 +1,35 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React from "react";
+import { Button } from "../ui/button";
+import { Link } from "react-router-dom";
 
-const TicketDetailPage = () => {
-  const { id } = useParams();  // Get the ticket ID from the URL
-  const [ticket, setTicket] = useState(null);
-
-  useEffect(() => {
-    // Mock API call or logic to fetch ticket details using the ticket id
-    const fetchedTicket = {
-      title: 'Sample Ticket Title',
-      description: 'Detailed description of the ticket.',
-      priority: 'High',
-    };
-    
-    // Set the fetched ticket details
-    setTicket(fetchedTicket);
-  }, [id]);
-
-  if (!ticket) {
-    return <div>Loading...</div>;
-  }
+export default function TicketDetail() {
+  // Replace with real data
+  const ticket = {
+    id: 1,
+    subject: "Unable to Login",
+    status: "Open",
+    description: "I am unable to login to my account. Every time I try, I get an error message.",
+    priority: "High",
+    createdAt: "2025-06-02",
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-semibold text-green-700 mb-4">{ticket.title}</h1>
-        <p className="text-lg text-gray-700 mb-6">{ticket.description}</p>
-        <p className="text-lg text-gray-500 mb-6">Priority: {ticket.priority}</p>
-        
-        {/* Back to Dashboard Button */}
-        <div className="text-center">
-          <Link to="/dashboard">
-            <button className="py-2 px-4 bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-all">
-              Back to Dashboard
-            </button>
-          </Link>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="bg-white rounded-xl shadow-lg border border-orange-100 p-10 w-full max-w-2xl">
+        <div className="mb-4">
+          <Link to="/view-tickets" className="text-orange-500 hover:underline">&larr; Back to Tickets</Link>
         </div>
+        <h1 className="text-2xl font-bold mb-4 text-orange-600">{ticket.subject}</h1>
+        <div className="mb-4">
+          <span className="inline-block bg-orange-100 text-orange-700 px-3 py-1 rounded-full mr-2">{ticket.status}</span>
+          <span className="inline-block bg-gray-100 text-gray-700 px-3 py-1 rounded-full">{ticket.priority}</span>
+        </div>
+        <div className="mb-6">
+          <p className="text-gray-700">{ticket.description}</p>
+        </div>
+        <div className="text-sm text-gray-500 mb-6">Created at: {ticket.createdAt}</div>
+        <Button className="bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md">Close Ticket</Button>
       </div>
     </div>
   );
-};
-
-export default TicketDetailPage;
+}
